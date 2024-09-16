@@ -3,21 +3,43 @@
   import ActivityTracker from './components/ActivityTracker.svelte';
   import InvestmentPortfolio from './components/InvestmentPortfolio.svelte';
   import ExpensePieChart from './components/ExpensePieChart.svelte';
-  import UserInput from './components/UserInput.svelte';
+  import HamburgerMenu from './components/HamburgerMenu.svelte';
+  import LastTransactions from './components/LastTransactions.svelte';
+  import LastInvestments from './components/LastInvestments.svelte';
+  import Login from './components/Login.svelte';
+  import Signup from './components/Signup.svelte';
 
   let username = '';
-  let password = ''; // New addition to store the password
+  let password = '';
+  let currentPage = 'login'; // Start with the login page
 
-  function handleUserSubmitted(event) {
+  let pieChartKey = 0;
+
+  function handleLoginSuccess(event) {
     username = event.detail.username;
-    password = event.detail.password; // Capture password when user submits the form
+    password = event.detail.password;
+    currentPage = 'home';
+  }
+
+  function handleSignupSuccess(event) {
+    username = event.detail.username;
+    password = event.detail.password;
+    currentPage = 'home';
+  }
+
+  function handleNavigation(event) {
+    currentPage = event.detail.page;
+  }
+
+  function handleLogout() {
+    username = '';
+    password = '';
+    currentPage = 'login';
   }
 
   function updatePieChart() {
-    pieChartKey = Math.random(); // Force pie chart to refresh
+    pieChartKey = Math.random();
   }
-
-  let pieChartKey = 0; // A key to force re-render of ExpensePieChart
 </script>
 
 <main>
@@ -25,25 +47,33 @@
     <h1>Finance Tracker</h1>
 
     {#if username && password}
-      <!-- Show the grid with user details and activities after login -->
-      <div class="grid-container">
-        <div class="grid-item">
-          <!-- Pass both username and password to UserOverview component -->
-          <UserOverview {username} {password} />
+      <HamburgerMenu on:navigate={handleNavigation} on:logout={handleLogout} />
+      {#if currentPage === 'home'}
+        <div class="grid-container">
+          <div class="grid-item">
+            <UserOverview {username} {password} />
+          </div>
+          <div class="grid-item">
+            <ActivityTracker {username} {password} on:updatePieChart={updatePieChart} />
+          </div>
+          <div class="grid-item">
+            <ExpensePieChart {username} {password} key={pieChartKey} />
+          </div>
+          <div class="grid-item">
+            <InvestmentPortfolio {username} {password} />
+          </div>
         </div>
-        <div class="grid-item">
-          <ActivityTracker {username} {password} on:updatePieChart={updatePieChart} />
-        </div>
-        <div class="grid-item">
-          <ExpensePieChart {username} {password} key={pieChartKey} />
-        </div>
-        <div class="grid-item">
-          <InvestmentPortfolio {username} />
-        </div>
-      </div>
+      {:else if currentPage === 'transactions'}
+        <LastTransactions {username} {password} />
+      {:else if currentPage === 'investments'}
+        <LastInvestments {username} {password} />
+      {/if}
     {:else}
-      <!-- Show the user input form if no username is set -->
-      <UserInput on:userSubmitted={handleUserSubmitted} />
+      {#if currentPage === 'login'}
+        <Login on:loginSuccess={handleLoginSuccess} on:navigate={handleNavigation} />
+      {:else if currentPage === 'signup'}
+        <Signup on:signupSuccess={handleSignupSuccess} on:navigate={handleNavigation} />
+      {/if}
     {/if}
   </div>
 </main>
@@ -68,6 +98,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     text-align: center;
+    position: relative;
   }
 
   .grid-container {
