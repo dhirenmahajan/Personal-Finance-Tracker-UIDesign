@@ -128,7 +128,7 @@
     </form>
   
     <!-- Display the investments by category in a bar chart -->
-    <h3>Investments by Category</h3>
+    <h2>Investments by Category</h2>
     {#if chartData.labels.length > 0}
       <Bar data={chartData} />
     {:else}
@@ -178,8 +178,9 @@
       background-color: var(--button-hover-background);
     }
   
-    h2, h3 {
+    h2 {
       margin-top: 0;
+      color: var(--primary-color);
     }
   </style>
   

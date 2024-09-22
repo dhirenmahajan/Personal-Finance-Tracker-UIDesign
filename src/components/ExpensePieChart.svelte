@@ -23,7 +23,7 @@
           datasets: [{
             label: 'Expenses',
             data: Object.values(expenseData),
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#808080', '#4BC0C0', '#9966FF', '#FF9F40', '#A52A2A']
+            backgroundColor: ['#FF6384', '#64D91C', '#FFCE56', '#808080', '#4BC0C0', '#9966FF', '#FF9F40', '#A52A2A']
           }]
         };
       }
@@ -70,13 +70,14 @@
       background-color: var(--card-background);
       padding: 1.5rem;
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      color: var(--text-color);
+      box-shadow: 0 4px 8px rgba(117, 30, 73, 0.1);
+      color: var(--primary-color);
       overflow-y: auto;
     }
   
     h2 {
       margin-top: 0;
+      color: var(--primary-color);
     }
   </style>
   

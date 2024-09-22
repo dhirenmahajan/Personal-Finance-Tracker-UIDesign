@@ -8,12 +8,22 @@
   import LastInvestments from './components/LastInvestments.svelte';
   import Login from './components/Login.svelte';
   import Signup from './components/Signup.svelte';
+  import Accounts from './components/Accounts.svelte';
+  import SpendAnalyser from './components/SpendAnalyser.svelte';
+  import { onMount } from 'svelte';
 
   let username = '';
   let password = '';
   let currentPage = 'login'; // Start with the login page
-
   let pieChartKey = 0;
+  let theme = localStorage.getItem('theme') || 'dark'; // Default to dark theme
+
+  // Toggle the theme and store the selection in localStorage
+  function toggleTheme() {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
 
   function handleLoginSuccess(event) {
     username = event.detail.username;
@@ -40,18 +50,35 @@
   function updatePieChart() {
     pieChartKey = Math.random();
   }
+
+  function handleUpdateBudget(event) {
+    console.log('Budget updated:', event.detail);
+  }
+
+  // Set the initial theme on mount
+  onMount(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  });
 </script>
 
 <main>
   <div id="app">
-    <h1>Finance Tracker</h1>
+    <h1> 💹Finance Tracker</h1>
 
     {#if username && password}
       <HamburgerMenu on:navigate={handleNavigation} on:logout={handleLogout} />
+      
       {#if currentPage === 'home'}
+        <div class="theme-toggle">
+          <button on:click={toggleTheme}>
+            {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+          </button>
+        </div>
+        
         <div class="grid-container">
           <div class="grid-item">
-            <UserOverview {username} {password} />
+            <Accounts /> <!-- Accounts Component -->
+            <SpendAnalyser /> <!-- Spend Analyser Component -->
           </div>
           <div class="grid-item">
             <ActivityTracker {username} {password} on:updatePieChart={updatePieChart} />
@@ -63,6 +90,8 @@
             <InvestmentPortfolio {username} {password} />
           </div>
         </div>
+      {:else if currentPage === 'userOverview'}
+        <UserOverview {username} {password} on:updateBudget={handleUpdateBudget} />
       {:else if currentPage === 'transactions'}
         <LastTransactions {username} {password} />
       {:else if currentPage === 'investments'}
@@ -84,41 +113,80 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #121212; /* Black background */
-    color: #ffffff; /* White text */
+    background-image: url("/src/assets/background.jpeg"); /* Using the imported local image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--text-color);
     padding: 2rem;
   }
 
   #app {
     width: 100%;
-    max-width: 1400px; /* Increased max-width for a larger layout */
-    background-color: #1e1e1e; /* Dark card background */
+    max-width: 1400px;
     padding: 2rem;
     margin: auto;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     text-align: center;
-    position: relative;
+    position: relative; 
   }
 
   .grid-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2-column layout */
-    grid-template-rows: auto auto; /* Automatic row heights */
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto auto;
     gap: 2rem;
     padding: 1rem;
   }
 
   .grid-item {
-    background-color: #262626; /* Slightly lighter black for grid items */
+    background-color: var(--card-background);
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    color: #ffffff;
+    color: var(--text-color);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Space between elements */
-    height: 100%; /* Full height for better alignment */
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .grid-container {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  h1 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  background-color: var(--card-background);
+  padding: 1rem 2rem; /* Add some padding for a neat background box */
+  border-radius: 8px; /* Rounded corners */
+  display: inline-block; /* Ensure the background doesn't stretch too much */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Slight shadow for the box */
+}
+
+
+  /* Theme Toggle Button */
+  .theme-toggle {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .theme-toggle button {
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .theme-toggle button:hover {
+    background-color: var(--button-hover-background);
   }
 </style>

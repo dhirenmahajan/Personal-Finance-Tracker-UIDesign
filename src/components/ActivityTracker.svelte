@@ -9,21 +9,24 @@
   let expenseAmount = '';
   let selectedCategory = '';
   let remainingBudget = 1000;
-  let notes = '';
   let shortComments = '';
+  let monthlyBudget = 1000; // Initialize with default value
 
   const dispatch = createEventDispatcher();
 
   function loadUserData() {
     if (!username || !password) return;
 
-    const storageKey = `${username}_${password}_transactions`;
+    const transactionsKey = `${username}_${password}_transactions`;
     const budgetKey = `${username}_${password}_budget`;
 
-    const savedTransactions = JSON.parse(localStorage.getItem(storageKey)) || [];
+    const savedTransactions = JSON.parse(localStorage.getItem(transactionsKey)) || [];
     transactions = savedTransactions;
 
-    remainingBudget = JSON.parse(localStorage.getItem(budgetKey)) || 1000;
+    remainingBudget = parseFloat(localStorage.getItem(budgetKey)) || 1000;
+
+    // Fetch the monthly budget
+    monthlyBudget = parseFloat(localStorage.getItem(budgetKey)) || 1000;
   }
 
   $: username, password, loadUserData();
@@ -35,25 +38,29 @@
       return;
     }
 
+    if (amount > remainingBudget) {
+      alert('Expense exceeds remaining budget.');
+      return;
+    }
+
     const newTransaction = {
       amount,
       category: selectedCategory,
-      notes,
-      shortComments
+      shortComments,
+      date: new Date().toISOString(),
     };
 
-    const storageKey = `${username}_${password}_transactions`;
+    const transactionsKey = `${username}_${password}_transactions`;
     const budgetKey = `${username}_${password}_budget`;
 
     transactions = [...transactions, newTransaction];
-    localStorage.setItem(storageKey, JSON.stringify(transactions));
+    localStorage.setItem(transactionsKey, JSON.stringify(transactions));
 
     remainingBudget -= amount;
     localStorage.setItem(budgetKey, JSON.stringify(remainingBudget));
 
     expenseAmount = '';
     selectedCategory = '';
-    notes = '';
     shortComments = '';
 
     alert('Entries saved successfully!');
@@ -66,10 +73,11 @@
 
   <form on:submit|preventDefault={handleSave}>
     <label for="amount">Expense Amount:</label>
-    <input id="amount" type="number" bind:value={expenseAmount} placeholder="Enter amount" />
+    <input id="amount" type="number" bind:value={expenseAmount} placeholder="Enter amount" required />
 
     <label for="category">Category:</label>
-    <select id="category" bind:value={selectedCategory}>
+    <select id="category" bind:value={selectedCategory} required>
+      <option value="" disabled>Select category</option>
       {#each categories as category}
         <option value={category}>{category}</option>
       {/each}
@@ -77,9 +85,6 @@
 
     <label for="budget">Remaining Budget:</label>
     <input id="budget" type="number" bind:value={remainingBudget} placeholder="Enter remaining budget" readonly />
-
-    <label for="notes">Notes:</label>
-    <textarea id="notes" bind:value={notes} placeholder="Enter detailed notes"></textarea>
 
     <label for="comments">Short Comments:</label>
     <input id="comments" type="text" bind:value={shortComments} placeholder="Enter short comments" />
@@ -95,6 +100,12 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  h2 {
+    margin-top: 0;
+    color: var(--primary-color);
   }
 
   form {
@@ -106,26 +117,40 @@
   label {
     display: block;
     margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--text-color); /* Ensuring label text is also white */
   }
 
-  input, select, textarea {
+  input,
+  select {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     box-sizing: border-box;
+    background-color: var(--input-background, #2c2c2c); /* Dark background for inputs */
+    color: var(--input-text-color, #ffffff); /* Light color for text inside inputs */
+    transition: background-color 0.3s, color 0.3s;
   }
 
   button {
-    background-color: var(--button-background);
-    color: var(--button-text);
+    background-color: var(--primary-color);
+    color: var(--text-color);
     border: none;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
   }
 
   button:hover {
     background-color: var(--button-hover-background);
+  }
+
+  @media (max-width: 768px) {
+    section {
+      padding: 1rem;
+    }
   }
 </style>
