@@ -9,11 +9,9 @@
     firstname: '',
     lastname: '',
     startDate: '',
-    activeDays: 0,
     daysSinceStart: 0,
   };
 
-  let remainingBudget = 1000;
   let monthlyBudget = 1000; // Initialize with default value
   let isEditing = false;
   let tempMonthlyBudget = 1000; // Temporary budget for editing
@@ -31,12 +29,9 @@
       localStorage.setItem(userDataKey, JSON.stringify(userData)); // Update storage with start date
     }
 
-    // Fetch the remaining budget
-    const budgetKey = `${username}_${password}_budget`;
-    remainingBudget = parseFloat(localStorage.getItem(budgetKey)) || 1000;
-
-    // Fetch the monthly budget
-    monthlyBudget = parseFloat(localStorage.getItem(budgetKey)) || 1000;
+    // Fetch the monthly budget using a separate key
+    const monthlyBudgetKey = `${username}_${password}_monthlyBudget`;
+    monthlyBudget = parseFloat(localStorage.getItem(monthlyBudgetKey)) || 1000;
     tempMonthlyBudget = monthlyBudget; // Initialize temp budget
 
     // Set user data and calculate the days since the actual start date
@@ -44,7 +39,6 @@
       firstname: userData.firstname || '',
       lastname: userData.lastname || '',
       startDate: userData.startDate,
-      activeDays: userData.transactions ? userData.transactions.length : 0,
       daysSinceStart: calculateDaysSinceStart(userData.startDate),
     };
   });
@@ -70,17 +64,11 @@
   function saveBudget() {
     // Update the monthly budget in localStorage
     monthlyBudget = tempMonthlyBudget;
-    const budgetKey = `${username}_${password}_budget`;
-    localStorage.setItem(budgetKey, JSON.stringify(monthlyBudget));
-
-    // Adjust remaining budget if it exceeds the new monthly budget
-    if (remainingBudget > monthlyBudget) {
-      remainingBudget = monthlyBudget;
-      localStorage.setItem(budgetKey, JSON.stringify(remainingBudget));
-    }
+    const monthlyBudgetKey = `${username}_${password}_monthlyBudget`;
+    localStorage.setItem(monthlyBudgetKey, JSON.stringify(monthlyBudget));
 
     isEditing = false;
-    dispatch('updateBudget', { monthlyBudget, remainingBudget });
+    dispatch('updateBudget', { monthlyBudget });
   }
 
   function cancelEdit() {
@@ -91,14 +79,13 @@
 
 <section>
   <h2>User Overview</h2>
-  <p><strong>Username:</strong> {username}</p>
-  <p><strong>First Name:</strong> {user.firstname}</p>
-  <p><strong>Last Name:</strong> {user.lastname}</p>
-  <p><strong>Date:</strong> {new Date().toLocaleString()}</p>
-  <p><strong>Days since starting:</strong> {user.daysSinceStart} days</p>
-  <p><strong>Active days:</strong> {user.activeDays} days</p>
-  <p><strong>Monthly Budget:</strong> ${monthlyBudget}</p>
-  <p><strong>Remaining Budget:</strong> ${remainingBudget}</p>
+  <div class="user-details">
+    <p><strong>Username:</strong> {username}</p>
+    <p><strong>First Name:</strong> {user.firstname}</p>
+    <p><strong>Last Name:</strong> {user.lastname}</p>
+    <p><strong>Days Since Starting:</strong> {user.daysSinceStart} days</p>
+    <p><strong>Monthly Budget:</strong> ${monthlyBudget}</p>
+  </div>
 
   <!-- Edit Budget Button -->
   <button on:click={toggleEdit}>
@@ -129,30 +116,40 @@
 <style>
   section {
     background-color: var(--card-background);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    border-radius: 10px;
     color: var(--text-color);
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   h2 {
     margin-top: 0;
     color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 1rem;
   }
 
-  p {
+  .user-details {
+    background-color: var(--input-background, #2c2c2c);
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .user-details p {
     margin: 0.5rem 0;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    line-height: 1.4;
   }
 
   button {
     background-color: var(--primary-color);
-    color: var(--text-color);
+    color: var(--button-text-color, #ffffff);
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
     cursor: pointer;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     font-size: 1rem;
     transition: background-color 0.3s ease;
   }
@@ -162,13 +159,10 @@
   }
 
   .budget-editor {
-    margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    background-color: #2c2c2c;
+    margin-top: 1.5rem;
+    background-color: var(--input-background, #2c2c2c);
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: 8px;
   }
 
   .budget-editor label {
@@ -182,7 +176,7 @@
     appearance: none;
     width: 100%;
     height: 8px;
-    background: #444;
+    background: var(--slider-background, #444);
     border-radius: 4px;
     outline: none;
     margin: 0.5rem 0;
@@ -191,8 +185,8 @@
   .budget-editor input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     background: var(--accent-color);
     cursor: pointer;
     border-radius: 50%;
@@ -200,8 +194,8 @@
   }
 
   .budget-editor input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     background: var(--accent-color);
     cursor: pointer;
     border-radius: 50%;
@@ -211,12 +205,13 @@
   .budget-buttons {
     display: flex;
     gap: 1rem;
+    margin-top: 1rem;
   }
 
   .budget-buttons button {
     flex: 1;
-    padding: 0.5rem;
-    font-size: 0.9rem;
+    padding: 0.75rem;
+    font-size: 1rem;
   }
 
   .cancel-button {
