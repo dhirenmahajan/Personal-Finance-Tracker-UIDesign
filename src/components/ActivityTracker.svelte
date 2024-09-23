@@ -8,9 +8,9 @@
   let transactions = [];
   let expenseAmount = '';
   let selectedCategory = '';
-  let remainingBudget = 1000;
   let shortComments = '';
   let monthlyBudget = 1000; // Initialize with default value
+  let remainingBudget = 1000; // Initialize with default value
 
   const dispatch = createEventDispatcher();
 
@@ -18,18 +18,28 @@
     if (!username || !password) return;
 
     const transactionsKey = `${username}_${password}_transactions`;
-    const budgetKey = `${username}_${password}_budget`;
+    const monthlyBudgetKey = `${username}_${password}_monthlyBudget`;
 
+    // Fetch transactions
     const savedTransactions = JSON.parse(localStorage.getItem(transactionsKey)) || [];
     transactions = savedTransactions;
 
-    remainingBudget = parseFloat(localStorage.getItem(budgetKey)) || 1000;
+    // Fetch monthly budget
+    monthlyBudget = parseFloat(localStorage.getItem(monthlyBudgetKey)) || 1000;
 
-    // Fetch the monthly budget
-    monthlyBudget = parseFloat(localStorage.getItem(budgetKey)) || 1000;
+    // Calculate remaining budget
+    const totalExpenses = transactions.reduce((total, txn) => total + txn.amount, 0);
+    remainingBudget = monthlyBudget - totalExpenses;
   }
 
+  // Recalculate when username, password, or transactions change
   $: username, password, loadUserData();
+  $: transactions, monthlyBudget, updateRemainingBudget();
+
+  function updateRemainingBudget() {
+    const totalExpenses = transactions.reduce((total, txn) => total + txn.amount, 0);
+    remainingBudget = monthlyBudget - totalExpenses;
+  }
 
   const handleSave = () => {
     const amount = parseFloat(expenseAmount);
@@ -51,13 +61,12 @@
     };
 
     const transactionsKey = `${username}_${password}_transactions`;
-    const budgetKey = `${username}_${password}_budget`;
 
     transactions = [...transactions, newTransaction];
     localStorage.setItem(transactionsKey, JSON.stringify(transactions));
 
-    remainingBudget -= amount;
-    localStorage.setItem(budgetKey, JSON.stringify(remainingBudget));
+    // Recalculate remaining budget
+    updateRemainingBudget();
 
     expenseAmount = '';
     selectedCategory = '';
@@ -66,6 +75,14 @@
     alert('Entries saved successfully!');
     dispatch('updatePieChart');
   };
+
+  // Listen for updates to the monthly budget from UserOverview
+  window.addEventListener('storage', (event) => {
+    if (event.key === `${username}_${password}_monthlyBudget`) {
+      monthlyBudget = parseFloat(event.newValue) || 1000;
+      updateRemainingBudget();
+    }
+  });
 </script>
 
 <section>
@@ -84,7 +101,7 @@
     </select>
 
     <label for="budget">Remaining Budget:</label>
-    <input id="budget" type="number" bind:value={remainingBudget} placeholder="Enter remaining budget" readonly />
+    <input id="budget" type="number" value={remainingBudget.toFixed(2)} readonly />
 
     <label for="comments">Short Comments:</label>
     <input id="comments" type="text" bind:value={shortComments} placeholder="Enter short comments" />
@@ -94,11 +111,11 @@
 </section>
 
 <style>
+  /* Your existing styles */
   section {
     background-color: var(--card-background);
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     color: var(--text-color);
     transition: background-color 0.3s, color 0.3s;
   }
@@ -118,7 +135,7 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
-    color: var(--text-color); /* Ensuring label text is also white */
+    color: var(--text-color);
   }
 
   input,
@@ -127,15 +144,20 @@
     padding: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: 4px;
+    background-color: var(--input-background, #2c2c2c);
+    color: var(--input-text-color, #ffffff);
     box-sizing: border-box;
-    background-color: var(--input-background, #2c2c2c); /* Dark background for inputs */
-    color: var(--input-text-color, #ffffff); /* Light color for text inside inputs */
     transition: background-color 0.3s, color 0.3s;
+  }
+
+  input[readonly] {
+    background-color: #444;
+    cursor: not-allowed;
   }
 
   button {
     background-color: var(--primary-color);
-    color: var(--text-color);
+    color: var(--button-text-color, #ffffff);
     border: none;
     padding: 0.75rem 1rem;
     border-radius: 4px;
