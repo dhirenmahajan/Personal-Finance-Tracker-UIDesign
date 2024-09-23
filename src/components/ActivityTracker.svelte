@@ -86,7 +86,7 @@
 </script>
 
 <section>
-  <h2>Log Activities</h2>
+  <h2>Log Expenses</h2>
 
   <form on:submit|preventDefault={handleSave}>
     <label for="amount">Expense Amount:</label>
