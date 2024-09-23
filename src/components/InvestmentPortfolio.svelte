@@ -3,7 +3,6 @@
   import { Bar } from 'svelte-chartjs';
   import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
 
-  // Register Chart.js components
   ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
   export let username = '';
@@ -22,7 +21,6 @@
 
   const dispatch = createEventDispatcher();
 
-  // Load investment data from localStorage
   function loadInvestmentData() {
     if (!username || !password) return;
 
@@ -30,21 +28,18 @@
     const savedInvestments = JSON.parse(localStorage.getItem(storageKey)) || [];
 
     investments = savedInvestments;
-    updateChart(); // Update the chart after loading investments
+    updateChart();
   }
 
-  // Save investments to localStorage
   function saveInvestments() {
     const storageKey = `${username}_${password}_investments`;
     localStorage.setItem(storageKey, JSON.stringify(investments));
   }
 
-  // Call loadInvestmentData when the component mounts
   onMount(() => {
     loadInvestmentData();
   });
 
-  // Function to update the investment chart
   function updateChart() {
     if (investments.length > 0) {
       let groupedData = investments.reduce((acc, investment) => {
@@ -63,11 +58,10 @@
         }],
       };
     } else {
-      chartData = { labels: [], datasets: [] }; // Clear chart data if no investments
+      chartData = { labels: [], datasets: [] };
     }
   }
 
-  // Function to handle saving a new investment
   function handleSaveInvestment() {
     const investmentAmount = parseFloat(amount);
     if (isNaN(investmentAmount) || investmentAmount <= 0) {
@@ -87,13 +81,13 @@
       amount: investmentAmount,
       category: selectedCategory,
       industry: selectedIndustry,
+      date: new Date().toISOString()  // Add the current date when saving
     };
 
-    investments = [...investments, newInvestment]; // Add new investment
-    saveInvestments(); // Save updated investments
-    updateChart(); // Update the chart after saving
+    investments = [...investments, newInvestment];
+    saveInvestments();
+    updateChart();
 
-    // Reset form fields
     amount = '';
     selectedCategory = '';
     selectedIndustry = '';
@@ -103,39 +97,37 @@
 </script>
 
 <section>
-<h2>Investment Portfolio</h2>
+  <h2>Investment Portfolio</h2>
 
-<!-- Form for adding investments -->
-<form on:submit|preventDefault={handleSaveInvestment}>
-  <label for="amount">Investment Amount:</label>
-  <input id="amount" type="number" bind:value={amount} placeholder="Enter investment amount" />
+  <form on:submit|preventDefault={handleSaveInvestment}>
+    <label for="amount">Investment Amount:</label>
+    <input id="amount" type="number" bind:value={amount} placeholder="Enter investment amount" />
 
-  <label for="category">Category:</label>
-  <select id="category" bind:value={selectedCategory}>
-    <option value="" disabled>Select category</option>
-    {#each investmentCategories as category}
-      <option value={category}>{category}</option>
-    {/each}
-  </select>
+    <label for="category">Category:</label>
+    <select id="category" bind:value={selectedCategory}>
+      <option value="" disabled>Select category</option>
+      {#each investmentCategories as category}
+        <option value={category}>{category}</option>
+      {/each}
+    </select>
 
-  <label for="industry">Industry:</label>
-  <select id="industry" bind:value={selectedIndustry}>
-    <option value="" disabled>Select industry</option>
-    {#each industries as industry}
-      <option value={industry}>{industry}</option>
-    {/each}
-  </select>
+    <label for="industry">Industry:</label>
+    <select id="industry" bind:value={selectedIndustry}>
+      <option value="" disabled>Select industry</option>
+      {#each industries as industry}
+        <option value={industry}>{industry}</option>
+      {/each}
+    </select>
 
-  <button type="submit">Add Investment</button>
-</form>
+    <button type="submit">Add Investment</button>
+  </form>
 
-<!-- Display the investments by category in a bar chart -->
-<h2>Investments by Category</h2>
-{#if chartData.labels.length > 0}
-  <Bar data={chartData} />
-{:else}
-  <p>No investments to display.</p>
-{/if}
+  <h2>Investments by Category</h2>
+  {#if chartData.labels.length > 0}
+    <Bar data={chartData} />
+  {:else}
+    <p>No investments to display.</p>
+  {/if}
 </section>
 
 <style>
