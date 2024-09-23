@@ -42,7 +42,7 @@
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: none;
+    background-color: var(--card-background);
     border: none;
     cursor: pointer;
     z-index: 1000;
